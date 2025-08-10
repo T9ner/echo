@@ -97,7 +97,8 @@ class TaskService:
         status: Optional[TaskStatus] = None,
         priority: Optional[TaskPriority] = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
+        search: Optional[str] = None
     ) -> List[Task]:
         """
         Get all tasks with optional filtering
@@ -139,7 +140,17 @@ class TaskService:
         if priority:
             query = query.filter(Task.priority == priority)
         
-        # Apply pagination and ordering
+        # Apply search filter
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                or_(
+                    Task.title.ilike(search_term),
+                    Task.description.ilike(search_term)
+                )
+            )
+        
+        # Apply pagination and ordering (use index-friendly ordering)
         query = query.order_by(Task.created_at.desc())  # Newest first
         query = query.offset(offset).limit(limit)
         

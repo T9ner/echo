@@ -15,10 +15,14 @@ from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, date, timedelta
 from collections import defaultdict
 import statistics
+import logging
 
 from app.models.task import Task
 from app.models.habit import Habit, HabitLog
 from app.models.enums import TaskStatus, TaskPriority, HabitFrequency
+from app.core.cache import cache_analytics_result
+
+logger = logging.getLogger(__name__)
 
 
 class AnalyticsService:
@@ -41,6 +45,7 @@ class AnalyticsService:
         """
         self.db = db
     
+    @cache_analytics_result(ttl=600)  # Cache for 10 minutes
     def get_productivity_overview(
         self,
         start_date: Optional[date] = None,
