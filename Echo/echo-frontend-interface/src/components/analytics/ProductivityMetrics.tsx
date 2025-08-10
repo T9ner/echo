@@ -7,9 +7,10 @@ import { ProductivityAnalytics } from '@/types';
 interface ProductivityMetricsProps {
   data?: ProductivityAnalytics;
   isLoading?: boolean;
+  dateRange?: string;
 }
 
-export function ProductivityMetrics({ data, isLoading }: ProductivityMetricsProps) {
+export function ProductivityMetrics({ data, isLoading, dateRange }: ProductivityMetricsProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -40,6 +41,13 @@ export function ProductivityMetrics({ data, isLoading }: ProductivityMetricsProp
     );
   }
 
+  // Extract data from the correct structure
+  const totalTasks = data.tasks?.total_tasks || 0;
+  const completedTasks = data.tasks?.completed_tasks || 0;
+  const completionRate = data.tasks?.completion_rate || 0;
+  const averageCompletionTime = data.tasks?.average_completion_time_hours || 0;
+  const productivityScore = data.overall_score?.overall_score || 0;
+
   const getProductivityScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-yellow-600';
@@ -52,21 +60,17 @@ export function ProductivityMetrics({ data, isLoading }: ProductivityMetricsProp
     return 'bg-red-500';
   };
 
-  const formatTime = (minutes: number) => {
-    if (minutes < 60) return `${Math.round(minutes)}m`;
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.round(minutes % 60);
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  const formatTime = (hours: number) => {
+    if (!hours || hours === 0) return 'No data';
+    if (hours < 1) return `${Math.round(hours * 60)}m`;
+    const wholeHours = Math.floor(hours);
+    const mins = Math.round((hours % 1) * 60);
+    return mins > 0 ? `${wholeHours}h ${mins}m` : `${wholeHours}h`;
   };
 
   const getMostProductiveHour = () => {
-    if (!data.most_productive_hours || data.most_productive_hours.length === 0) {
-      return 'No data';
-    }
-    const hour = data.most_productive_hours[0];
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${displayHour}:00 ${period}`;
+    // For now, return "No data" since this field isn't in the current API response
+    return 'No data';
   };
 
   return (
@@ -77,7 +81,7 @@ export function ProductivityMetrics({ data, isLoading }: ProductivityMetricsProp
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Tasks</p>
-              <p className="text-3xl font-bold text-gray-900">{data.total_tasks}</p>
+              <p className="text-3xl font-bold text-gray-900">{totalTasks}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-full">
               <Target className="h-6 w-6 text-blue-600" />
@@ -86,7 +90,7 @@ export function ProductivityMetrics({ data, isLoading }: ProductivityMetricsProp
           <div className="mt-4">
             <div className="flex items-center text-sm text-gray-600">
               <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
-              {data.completed_tasks} completed
+              {completedTasks} completed
             </div>
           </div>
         </CardContent>
@@ -99,7 +103,7 @@ export function ProductivityMetrics({ data, isLoading }: ProductivityMetricsProp
             <div>
               <p className="text-sm font-medium text-gray-600">Completion Rate</p>
               <p className="text-3xl font-bold text-gray-900">
-                {Math.round(data.completion_rate)}%
+                {isNaN(completionRate) ? '0' : Math.round(completionRate)}%
               </p>
             </div>
             <div className="p-3 bg-green-100 rounded-full">
@@ -107,18 +111,16 @@ export function ProductivityMetrics({ data, isLoading }: ProductivityMetricsProp
             </div>
           </div>
           <Progress 
-            value={data.completion_rate} 
+            value={isNaN(completionRate) ? 0 : completionRate} 
             className="h-2"
-            // @ts-ignore - custom color prop
-            color={getCompletionRateColor(data.completion_rate)}
           />
           <div className="mt-2">
             <Badge 
-              variant={data.completion_rate >= 80 ? 'default' : 'secondary'}
-              className={data.completion_rate >= 80 ? 'bg-green-500' : ''}
+              variant={completionRate >= 80 ? 'default' : 'secondary'}
+              className={completionRate >= 80 ? 'bg-green-500' : ''}
             >
-              {data.completion_rate >= 80 ? 'Excellent' : 
-               data.completion_rate >= 60 ? 'Good' : 'Needs Improvement'}
+              {completionRate >= 80 ? 'Excellent' : 
+               completionRate >= 60 ? 'Good' : 'Needs Improvement'}
             </Badge>
           </div>
         </CardContent>
@@ -131,7 +133,7 @@ export function ProductivityMetrics({ data, isLoading }: ProductivityMetricsProp
             <div>
               <p className="text-sm font-medium text-gray-600">Avg. Completion Time</p>
               <p className="text-3xl font-bold text-gray-900">
-                {formatTime(data.average_completion_time)}
+                {formatTime(averageCompletionTime)}
               </p>
             </div>
             <div className="p-3 bg-purple-100 rounded-full">
@@ -152,8 +154,8 @@ export function ProductivityMetrics({ data, isLoading }: ProductivityMetricsProp
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Productivity Score</p>
-              <p className={`text-3xl font-bold ${getProductivityScoreColor(data.productivity_score)}`}>
-                {Math.round(data.productivity_score)}
+              <p className={`text-3xl font-bold ${getProductivityScoreColor(productivityScore)}`}>
+                {isNaN(productivityScore) ? '0' : Math.round(productivityScore)}
               </p>
             </div>
             <div className="p-3 bg-orange-100 rounded-full">

@@ -14,7 +14,6 @@ interface KeyboardShortcut {
 
 interface UseKeyboardShortcutsProps {
   onNavigate: (tab: ActiveTab) => void;
-  onOpenSearch: () => void;
   onCreateTask?: () => void;
   onCreateHabit?: () => void;
   onToggleTheme?: () => void;
@@ -23,7 +22,6 @@ interface UseKeyboardShortcutsProps {
 
 export function useKeyboardShortcuts({
   onNavigate,
-  onOpenSearch,
   onCreateTask,
   onCreateHabit,
   onToggleTheme,
@@ -75,20 +73,7 @@ export function useKeyboardShortcuts({
       category: 'Navigation'
     },
     
-    // Search shortcuts
-    {
-      key: 'k',
-      ctrlKey: true,
-      action: onOpenSearch,
-      description: 'Open Global Search',
-      category: 'Search'
-    },
-    {
-      key: '/',
-      action: onOpenSearch,
-      description: 'Open Global Search',
-      category: 'Search'
-    },
+
     
     // Creation shortcuts
     {
@@ -135,10 +120,7 @@ export function useKeyboardShortcuts({
       target.tagName === 'TEXTAREA' ||
       target.contentEditable === 'true'
     ) {
-      // Allow Ctrl+K and / even in inputs for search
-      if (!((event.ctrlKey && event.key === 'k') || event.key === '/')) {
-        return;
-      }
+      return;
     }
 
     for (const shortcut of shortcuts) {
@@ -181,10 +163,7 @@ export function useKeyboardShortcutsHelp() {
       { keys: ['Ctrl', '5'], description: 'Go to Chat' },
       { keys: ['Ctrl', '6'], description: 'Go to Analytics' },
     ]},
-    { category: 'Search', items: [
-      { keys: ['Ctrl', 'K'], description: 'Open Global Search' },
-      { keys: ['/'], description: 'Open Global Search' },
-    ]},
+
     { category: 'Actions', items: [
       { keys: ['Ctrl', 'N'], description: 'Create New Task' },
       { keys: ['Ctrl', 'Shift', 'H'], description: 'Create New Habit' },

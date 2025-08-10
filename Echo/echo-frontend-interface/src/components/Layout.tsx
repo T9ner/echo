@@ -8,9 +8,9 @@ import { HabitsView } from '@/components/HabitsView';
 import { CalendarView } from '@/components/CalendarView';
 import { ChatView } from '@/components/ChatView';
 import { AnalyticsView } from '@/components/AnalyticsView';
-import { GlobalSearch } from '@/components/search/GlobalSearch';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { ActiveTab } from '@/types';
 
@@ -18,8 +18,7 @@ export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Advanced features state
-  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  // UI state
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
 
   // Note: Offline support removed for cleaner UI
@@ -67,14 +66,10 @@ export function Layout() {
   // Keyboard shortcuts
   useKeyboardShortcuts({
     onNavigate: handleTabChange,
-    onOpenSearch: () => setShowGlobalSearch(true),
     onCreateTask: () => {
-      // Navigate to tasks and trigger create
       handleTabChange('tasks');
-      // Could dispatch a custom event or use a global state
     },
     onCreateHabit: () => {
-      // Navigate to habits and trigger create
       handleTabChange('habits');
     },
     currentTab: activeTab
@@ -99,7 +94,7 @@ export function Layout() {
   const renderActiveView = () => {
     switch (activeTab) {
       case 'main':
-        return <MainDashboard />;
+        return <MainDashboard onNavigate={handleTabChange} />;
       case 'tasks':
         return <TasksView />;
       case 'habits':
@@ -111,7 +106,7 @@ export function Layout() {
       case 'analytics':
         return <AnalyticsView />;
       default:
-        return <MainDashboard />;
+        return <MainDashboard onNavigate={handleTabChange} />;
     }
   };
 
@@ -124,37 +119,32 @@ export function Layout() {
         </div>
 
         <SidebarInset className="flex flex-col flex-1 min-w-0">
-          {/* Header Bar - Clean and minimal */}
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-            <div className="flex-1" />
-            <div className="flex items-center gap-2">
-              {/* Notification Center */}
-              <NotificationCenter onNavigate={handleNavigateWithId} />
-              
-              {/* Keyboard Shortcuts Help */}
-              <button
-                onClick={() => setShowKeyboardHelp(true)}
-                className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-accent transition-colors"
-                title="Keyboard Shortcuts (Press ?)"
-              >
-                ?
-              </button>
-            </div>
+          {/* Clean Header Bar */}
+          <header className="flex h-16 shrink-0 items-center justify-end gap-3 border-b border-border/50 px-6 bg-background/80 backdrop-blur-sm">
+            {/* Notification Center */}
+            <NotificationCenter onNavigate={handleNavigateWithId} />
+            
+            {/* Theme Toggle */}
+            <ThemeToggle />
+            
+            {/* Keyboard Shortcuts Help */}
+            <button
+              onClick={() => setShowKeyboardHelp(true)}
+              className="flex items-center justify-center w-10 h-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-smooth focus-ring"
+              title="Keyboard Shortcuts (Press ?)"
+            >
+              <span className="text-sm font-medium">?</span>
+            </button>
           </header>
 
-          {/* Main Content */}
-          <div className="flex-1 overflow-y-auto animate-fade-in">
-            {renderActiveView()}
+          {/* Enhanced Main Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="animate-fade-in">
+              {renderActiveView()}
+            </div>
           </div>
         </SidebarInset>
       </div>
-
-      {/* Global Search Modal */}
-      <GlobalSearch
-        isOpen={showGlobalSearch}
-        onClose={() => setShowGlobalSearch(false)}
-        onNavigate={handleNavigateWithId}
-      />
 
       {/* Keyboard Shortcuts Help Modal */}
       <KeyboardShortcutsHelp
@@ -162,22 +152,50 @@ export function Layout() {
         onClose={() => setShowKeyboardHelp(false)}
       />
 
-      {/* CSS for highlight animation */}
+      {/* Enhanced CSS for animations */}
       <style>{`
         .highlight-item {
-          animation: highlight 2s ease-in-out;
+          animation: highlight 2s cubic-bezier(0.23, 1, 0.32, 1);
         }
-        .animate-fade-in { animation: fadeIn 0.25s ease-in; }
         
         @keyframes highlight {
-          0% { background-color: transparent; }
-          50% { background-color: rgba(59, 130, 246, 0.1); }
-          100% { background-color: transparent; }
+          0% { 
+            background-color: transparent; 
+            transform: scale(1);
+          }
+          50% { 
+            background-color: hsl(var(--primary) / 0.1); 
+            transform: scale(1.02);
+          }
+          100% { 
+            background-color: transparent; 
+            transform: scale(1);
+          }
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        /* Smooth page transitions */
+        .page-transition-enter {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        
+        .page-transition-enter-active {
+          opacity: 1;
+          transform: translateY(0);
+          transition: opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1), 
+                      transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        .page-transition-exit {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        
+        .page-transition-exit-active {
+          opacity: 0;
+          transform: translateY(-20px);
+          transition: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1), 
+                      transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
         }
       `}</style>
     </SidebarProvider>

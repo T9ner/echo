@@ -29,38 +29,41 @@ interface AnalyticsChartsProps {
 export function AnalyticsCharts({ productivityData, habitData, isLoading }: AnalyticsChartsProps) {
   // Process task completion data for charts
   const taskCompletionData = useMemo(() => {
-    if (!productivityData?.task_completion_by_day) return [];
+    if (!productivityData?.tasks?.productivity_by_day) return [];
     
-    return productivityData.task_completion_by_day.map(day => ({
+    return productivityData.tasks.productivity_by_day.map(day => ({
       date: format(parseISO(day.date), 'MMM d'),
       fullDate: day.date,
-      completed: day.completed,
-      created: day.created,
-      completionRate: day.created > 0 ? (day.completed / day.created) * 100 : 0,
+      completed: day.tasks_completed || 0,
+      created: day.tasks_created || 0,
+      completionRate: day.tasks_created > 0 ? (day.tasks_completed / day.tasks_created) * 100 : 0,
     }));
   }, [productivityData]);
 
   // Process habit completion data
   const habitCompletionData = useMemo(() => {
-    if (!habitData?.completion_by_day) return [];
+    if (!productivityData?.habits?.completion_by_day) return [];
     
-    return habitData.completion_by_day.slice(-14).map(day => ({
+    return productivityData.habits.completion_by_day.slice(-14).map(day => ({
       date: format(parseISO(day.date), 'MMM d'),
-      completed: day.completed ? 1 : 0,
-      streak: day.streak_day,
+      completed: day.total_completions > 0 ? 1 : 0,
+      completions: day.total_completions || 0,
     }));
-  }, [habitData]);
+  }, [productivityData]);
 
-  // Productivity score breakdown (mock data for pie chart)
+  // Productivity score breakdown
   const productivityBreakdown = useMemo(() => {
-    if (!productivityData) return [];
+    if (!productivityData?.overall_score) return [];
     
-    const score = productivityData.productivity_score;
+    const taskScore = productivityData.overall_score.task_score || 0;
+    const habitScore = productivityData.overall_score.habit_score || 0;
+    const overallScore = productivityData.overall_score.overall_score || 0;
+    
     return [
-      { name: 'Completed Tasks', value: productivityData.completion_rate, color: '#10b981' },
-      { name: 'Efficiency', value: Math.min(100 - productivityData.average_completion_time / 10, 100), color: '#3b82f6' },
-      { name: 'Consistency', value: score * 0.8, color: '#8b5cf6' },
-      { name: 'Room for Growth', value: Math.max(0, 100 - score), color: '#e5e7eb' },
+      { name: 'Completed Tasks', value: isNaN(taskScore) ? 0 : taskScore, color: '#10b981' },
+      { name: 'Efficiency', value: isNaN(taskScore) ? 0 : Math.min(taskScore * 1.2, 50), color: '#3b82f6' },
+      { name: 'Consistency', value: isNaN(habitScore) ? 0 : habitScore, color: '#8b5cf6' },
+      { name: 'Room for Growth', value: isNaN(overallScore) ? 100 : Math.max(0, 100 - overallScore), color: '#e5e7eb' },
     ];
   }, [productivityData]);
 
@@ -166,39 +169,8 @@ export function AnalyticsCharts({ productivityData, habitData, isLoading }: Anal
         </TabsContent>
 
         <TabsContent value="habits" className="space-y-4">
-          {/* Habit Completion Pattern */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Habit Completion Pattern (Last 14 Days)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={habitCompletionData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 12 }}
-                    domain={[0, 1]}
-                    tickFormatter={(value) => value ? 'Done' : 'Missed'}
-                  />
-                  <Tooltip 
-                    formatter={(value) => [value ? 'Completed' : 'Missed', 'Status']}
-                  />
-                  <Bar 
-                    dataKey="completed" 
-                    fill="#10b981"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Habit Streak Progress */}
-          {habitData && (
+          {/* Habit Statistics Only */}
+          {productivityData?.habits && (
             <Card>
               <CardHeader>
                 <CardTitle>Habit Statistics</CardTitle>
@@ -207,29 +179,45 @@ export function AnalyticsCharts({ productivityData, habitData, isLoading }: Anal
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-green-600">
-                      {Math.round(habitData.completion_rate)}%
+                      {isNaN(productivityData.habits.consistency_rate) ? '0' : Math.round(productivityData.habits.consistency_rate)}%
                     </p>
                     <p className="text-sm text-gray-600">Completion Rate</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-blue-600">
-                      {habitData.current_streak}
+                      {productivityData.habits.average_streak || 0}
                     </p>
                     <p className="text-sm text-gray-600">Current Streak</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-purple-600">
-                      {habitData.longest_streak}
+                      {productivityData.habits.best_streak || 0}
                     </p>
                     <p className="text-sm text-gray-600">Best Streak</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-orange-600">
-                      {habitData.total_completions}
+                      {productivityData.habits.total_completions || 0}
                     </p>
                     <p className="text-sm text-gray-600">Total Completions</p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Empty state when no habits */}
+          {(!productivityData?.habits || productivityData.habits.total_habits === 0) && (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="text-gray-400 mb-4">
+                  <svg className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Habits Yet</h3>
+                <p className="text-gray-600 mb-4">Start building habits to see your progress and patterns here.</p>
+                <p className="text-sm text-gray-500">Create your first habit in the Habits section to get started!</p>
               </CardContent>
             </Card>
           )}

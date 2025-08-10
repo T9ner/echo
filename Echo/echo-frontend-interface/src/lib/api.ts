@@ -169,32 +169,45 @@ export const chatApi = {
 
 // Analytics API functions
 export const analyticsApi = {
-  // Get productivity analytics
+  // Get productivity analytics (overview endpoint)
   getProductivityAnalytics: async (startDate: string, endDate: string): Promise<ProductivityAnalytics> => {
     const params = new URLSearchParams();
     params.append('start_date', startDate);
     params.append('end_date', endDate);
     
-    const response: AxiosResponse<ProductivityAnalytics> = await api.get(`/analytics/productivity?${params.toString()}`);
+    const response: AxiosResponse<ProductivityAnalytics> = await api.get(`/analytics/overview?${params.toString()}`);
     return response.data;
   },
 
-  // Get habit analytics
+  // Get habit analytics (use overview endpoint for now)
   getHabitAnalytics: async (habitId?: string): Promise<HabitAnalytics> => {
-    const params = new URLSearchParams();
-    if (habitId) params.append('habit_id', habitId);
-    
-    const response: AxiosResponse<HabitAnalytics> = await api.get(`/analytics/habits?${params.toString()}`);
-    return response.data;
+    // For now, return empty data since the backend doesn't have a separate habit analytics endpoint
+    // that matches the expected HabitAnalytics type
+    return {
+      habit_id: habitId,
+      completion_rate: 0,
+      current_streak: 0,
+      longest_streak: 0,
+      total_completions: 0,
+      completion_by_day: []
+    };
   },
 
   // Get productivity insights
   getProductivityInsights: async (timeframe: string = 'week'): Promise<ProductivityInsights> => {
-    const params = new URLSearchParams();
-    params.append('timeframe', timeframe);
+    const response: AxiosResponse<any> = await api.get(`/analytics/insights`);
     
-    const response: AxiosResponse<ProductivityInsights> = await api.get(`/analytics/insights?${params.toString()}`);
-    return response.data;
+    // Transform the backend response to match our ProductivityInsights type
+    const insights = response.data || [];
+    return {
+      insights: insights.map((insight: any) => insight.description || '').filter(Boolean),
+      recommendations: insights.map((insight: any) => insight.action_items || []).flat(),
+      patterns: insights.map((insight: any) => ({
+        type: insight.insight_type || 'general',
+        description: insight.description || '',
+        confidence: insight.confidence || 0
+      }))
+    };
   },
 };
 

@@ -1,5 +1,6 @@
 import { Home, CheckSquare, Target, Calendar, MessageCircle, BarChart3 } from 'lucide-react';
 import { ActiveTab } from '@/types';
+
 import {
   Sidebar,
   SidebarContent,
@@ -27,41 +28,35 @@ const navigationItems = [
 export function EchoSidebar({ activeTab, onTabChange }: EchoSidebarProps) {
   return (
     <Sidebar collapsible="none" className="bg-sidebar border-sidebar-border">
-      <div className="p-4 border-b border-sidebar-border">
+      {/* Clean Header */}
+      <div className="p-4 border-b border-sidebar-border/50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl relative flex items-center justify-center shadow-glow bg-gradient-primary overflow-hidden">
-            <img
-              src="/echo-logo.svg"
-              alt="ECHO Logo"
-              className="w-full h-full object-contain p-1 drop-shadow-sm"
-              loading="lazy"
-            />
-          </div>
           <div className="leading-tight select-none">
-            <h1 className="font-extrabold text-lg tracking-tight text-gradient-brand">ECHO</h1>
-            <p className="text-sidebar-foreground/60 text-[11px] uppercase tracking-wide">Productivity AI</p>
+            <h1 className="font-bold text-lg tracking-tight text-gradient-brand">ECHO</h1>
+            <p className="text-sidebar-foreground/60 text-xs uppercase tracking-wide">AI Assistant</p>
           </div>
         </div>
       </div>
 
-      <SidebarContent className="p-4">
+      {/* Clean Navigation */}
+      <SidebarContent className="p-3">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     onClick={() => onTabChange(item.id)}
                     className={`
-                      w-full justify-start rounded-lg transition-all duration-200 mb-2
+                      w-full justify-start rounded-lg p-3 transition-smooth
                       ${activeTab === item.id
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground border border-sidebar-accent-foreground/20 shadow-subtle'
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
                         : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
                       }
                     `}
                   >
                     <item.icon className={`h-5 w-5 ${activeTab === item.id ? 'text-primary' : ''}`} />
-                    <span className="ml-3">{item.label}</span>
+                    <span className="ml-3 font-medium">{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

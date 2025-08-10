@@ -54,6 +54,7 @@ export enum HabitFrequency {
 }
 
 export interface Habit {
+  [x: string]: string | number | Date;
   id: string;
   name: string;
   description?: string;
@@ -103,17 +104,84 @@ export interface ChatResponse {
 }
 
 export interface ProductivityAnalytics {
-  total_tasks: number;
-  completed_tasks: number;
-  completion_rate: number;
-  average_completion_time: number;
-  productivity_score: number;
-  most_productive_hours: number[];
-  task_completion_by_day: Array<{
-    date: string;
-    completed: number;
-    created: number;
-  }>;
+  period: {
+    start_date: string;
+    end_date: string;
+    days: number;
+  };
+  tasks: {
+    total_tasks: number;
+    completed_tasks: number;
+    completion_rate: number;
+    overdue_tasks: number;
+    by_priority: Record<string, {
+      total: number;
+      completed: number;
+      completion_rate: number;
+    }>;
+    by_status: Record<string, number>;
+    average_completion_time_hours: number | null;
+    productivity_by_day: Array<{
+      date: string;
+      tasks_completed: number;
+      tasks_created: number;
+      day_of_week: string;
+    }>;
+  };
+  habits: {
+    total_habits: number;
+    active_habits: number;
+    total_completions: number;
+    average_streak: number;
+    best_streak: number;
+    consistency_rate: number;
+    by_frequency: Record<string, {
+      count: number;
+      average_streak: number;
+    }>;
+    habit_details: Array<{
+      id: string;
+      name: string;
+      frequency: string;
+      current_streak: number;
+      longest_streak: number;
+      completions_in_period: number;
+    }>;
+    completion_by_day: Array<{
+      date: string;
+      total_completions: number;
+      unique_habits_completed: number;
+      day_of_week: string;
+    }>;
+  };
+  trends: {
+    weekly_trends: Array<{
+      week_start: string;
+      week_end: string;
+      tasks_completed: number;
+      habit_completions: number;
+      productivity_score: number;
+    }>;
+    day_of_week_patterns: Record<string, {
+      tasks_completed: number;
+      habit_completions: number;
+      productivity_score: number;
+    }>;
+    momentum: {
+      direction: string;
+      percentage_change: number;
+      first_half_score: number;
+      second_half_score: number;
+    };
+  };
+  overall_score: {
+    overall_score: number;
+    task_score: number;
+    habit_score: number;
+    grade: string;
+    description: string;
+  };
+  recommendations: string[];
 }
 
 export interface HabitAnalytics {

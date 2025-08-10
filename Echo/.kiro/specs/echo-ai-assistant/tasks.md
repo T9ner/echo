@@ -111,6 +111,8 @@
 
 - [ ] 12. Add authentication and security middleware
 
+
+
   - Implement JWT authentication system with token generation
   - Create authentication middleware for API protection
   - Add rate limiting middleware to prevent API abuse
