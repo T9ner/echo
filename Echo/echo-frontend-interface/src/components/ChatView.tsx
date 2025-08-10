@@ -116,29 +116,36 @@ export function ChatView() {
   const isConnected = !healthError;
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Simple Header */}
-      <div className="flex-shrink-0 p-6 border-b border-border/50">
-        <div className="flex items-center gap-4">
+    <div className="h-full flex flex-col bg-background overflow-hidden relative">
+      {/* Compact Header */}
+      <div className="flex-shrink-0 px-4 sm:px-6 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+        <div className="flex items-center gap-3 max-w-4xl mx-auto">
+          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+            <div className="w-4 h-4 bg-primary rounded-full animate-pulse" />
+          </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-lg font-semibold text-foreground">
               Chat with ECHO
             </h1>
-            <p className="text-muted-foreground text-sm">
-              Your AI productivity assistant
+            <p className="text-xs text-muted-foreground">
+              {isConnected ? 'Online' : 'Offline'} • AI productivity assistant
             </p>
           </div>
         </div>
       </div>
 
-      {/* Chat History */}
-      <ChatHistory messages={messages} isLoading={isTyping} />
-
-      {/* Chat Input */}
-      <ChatInput
-        onSendMessage={handleSendMessage}
-        disabled={!isConnected || isTyping}
-      />
+      {/* Chat History - Scrollable area with bottom padding for fixed input */}
+      <div className="flex-1 min-h-0 overflow-y-auto pb-32">
+        <ChatHistory messages={messages} isLoading={isTyping} />
+      </div>
+        
+      {/* Chat Input - Fixed at bottom of viewport */}
+      <div className="fixed bottom-0 left-0 lg:left-64 right-0 bg-background/95 backdrop-blur-sm border-t border-border/50 z-50">
+        <ChatInput
+          onSendMessage={handleSendMessage}
+          disabled={!isConnected || isTyping}
+        />
+      </div>
     </div>
   );
 }

@@ -3,27 +3,23 @@ import { Plus, RefreshCw, ArrowUpDown, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TaskForm } from './tasks/TaskForm';
-import { TaskFilters } from './tasks/TaskFilters';
 import { TaskList } from './tasks/TaskList';
 import { DragDropTaskList } from './tasks/DragDropTaskList';
 import { useTasks } from '@/hooks/useTasks';
 import { useApiHealth } from '@/hooks/useApiHealth';
-import { TaskFilters as TaskFiltersType } from '@/types';
 
 export function TasksView() {
-  const [filters, setFilters] = useState<TaskFiltersType>({});
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [useDragDrop, setUseDragDrop] = useState(false);
 
-  // Fetch tasks with current filters
-  const { data: tasks = [], isLoading, error, refetch } = useTasks(filters);
+  // Fetch all tasks without filters
+  const { data: tasks = [], isLoading, error, refetch } = useTasks();
   
   // Check API health
   const { data: healthStatus, isError: healthError } = useApiHealth();
 
-  // Calculate filtered count for display
+  // Calculate task count for display
   const totalTasks = tasks.length;
-  const filteredTasks = tasks.length; // Since filtering is done on the server
 
   const handleRefresh = () => {
     refetch();
@@ -92,13 +88,10 @@ export function TasksView() {
           </Alert>
         )}
 
-        {/* Filters */}
-        <TaskFilters
-          filters={filters}
-          onFiltersChange={setFilters}
-          totalCount={totalTasks}
-          filteredCount={filteredTasks}
-        />
+        {/* Task count display */}
+        <div className="text-sm text-gray-600">
+          Showing {totalTasks} tasks
+        </div>
       </div>
 
       {/* Task List */}
@@ -106,7 +99,6 @@ export function TasksView() {
         {useDragDrop ? (
           <DragDropTaskList
             tasks={tasks}
-            filters={filters}
             isLoading={isLoading}
             error={error}
             showDetails={false}
@@ -118,7 +110,6 @@ export function TasksView() {
         ) : (
           <TaskList
             tasks={tasks}
-            filters={filters}
             isLoading={isLoading}
             error={error}
             showDetails={false}

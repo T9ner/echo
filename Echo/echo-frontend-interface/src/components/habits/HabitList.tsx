@@ -1,55 +1,37 @@
 import { useMemo } from 'react';
 import { HabitItem } from './HabitItem';
-import { Habit, HabitFilters } from '@/types';
+import { Habit } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Flame, Target, Calendar } from 'lucide-react';
 
 interface HabitListProps {
   habits: Habit[];
-  filters: HabitFilters;
   isLoading?: boolean;
   error?: Error | null;
   onEditHabit?: (habit: Habit) => void;
 }
 
-export function HabitList({ habits, filters, isLoading, error, onEditHabit }: HabitListProps) {
-  // Filter habits based on filters
-  const filteredHabits = useMemo(() => {
-    let filtered = [...habits];
-
-    if (filters.frequency) {
-      filtered = filtered.filter(habit => habit.frequency === filters.frequency);
-    }
-
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(habit => 
-        habit.name.toLowerCase().includes(searchLower) ||
-        (habit.description && habit.description.toLowerCase().includes(searchLower))
-      );
-    }
-
-    // Sort by current streak (highest first), then by creation date
-    filtered.sort((a, b) => {
+export function HabitList({ habits, isLoading, error, onEditHabit }: HabitListProps) {
+  // Sort habits by current streak (highest first), then by creation date
+  const sortedHabits = useMemo(() => {
+    return [...habits].sort((a, b) => {
       if (a.current_streak !== b.current_streak) {
         return b.current_streak - a.current_streak;
       }
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-
-    return filtered;
-  }, [habits, filters]);
+  }, [habits]);
 
   // Group habits by performance for better organization
   const groupedHabits = useMemo(() => {
     const groups = {
-      active: filteredHabits.filter(habit => habit.current_streak > 0),
-      inactive: filteredHabits.filter(habit => habit.current_streak === 0),
+      active: sortedHabits.filter(habit => habit.current_streak > 0),
+      inactive: sortedHabits.filter(habit => habit.current_streak === 0),
     };
 
     return groups;
-  }, [filteredHabits]);
+  }, [sortedHabits]);
 
   // Mock today's completion status (in real app, this would come from API)
   const getTodayCompletionStatus = (habitId: string) => {
@@ -93,22 +75,17 @@ export function HabitList({ habits, filters, isLoading, error, onEditHabit }: Ha
     );
   }
 
-  if (filteredHabits.length === 0) {
-    const hasFilters = Object.keys(filters).length > 0;
-    
+  if (sortedHabits.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
           <Target className="h-12 w-12 text-gray-400" />
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">
-          {hasFilters ? 'No habits match your filters' : 'No habits yet'}
+          No habits yet
         </h3>
         <p className="text-gray-500 mb-4">
-          {hasFilters 
-            ? 'Try adjusting your filters to see more habits.'
-            : 'Create your first habit to start building better routines.'
-          }
+          Create your first habit to start building better routines.
         </p>
       </div>
     );
@@ -161,13 +138,13 @@ export function HabitList({ habits, filters, isLoading, error, onEditHabit }: Ha
       )}
 
       {/* Summary Stats */}
-      {filteredHabits.length > 0 && (
+      {sortedHabits.length > 0 && (
         <div className="bg-gray-50 rounded-lg p-4">
           <h4 className="font-medium text-gray-900 mb-2">Quick Stats</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
               <span className="text-gray-600">Total Habits:</span>
-              <span className="ml-2 font-medium">{filteredHabits.length}</span>
+              <span className="ml-2 font-medium">{sortedHabits.length}</span>
             </div>
             <div>
               <span className="text-gray-600">Active Streaks:</span>
@@ -176,13 +153,13 @@ export function HabitList({ habits, filters, isLoading, error, onEditHabit }: Ha
             <div>
               <span className="text-gray-600">Longest Streak:</span>
               <span className="ml-2 font-medium">
-                {Math.max(...filteredHabits.map(h => h.longest_streak), 0)} days
+                {Math.max(...sortedHabits.map(h => h.longest_streak), 0)} days
               </span>
             </div>
             <div>
               <span className="text-gray-600">Total Streaks:</span>
               <span className="ml-2 font-medium">
-                {filteredHabits.reduce((sum, h) => sum + h.current_streak, 0)} days
+                {sortedHabits.reduce((sum, h) => sum + h.current_streak, 0)} days
               </span>
             </div>
           </div>

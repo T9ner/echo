@@ -19,7 +19,7 @@ import {
   restrictToWindowEdges,
 } from '@dnd-kit/modifiers';
 import { SortableTaskItem } from './SortableTaskItem';
-import { Task, TaskFilters } from '@/types';
+import { Task } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { GripVertical, ArrowUpDown } from 'lucide-react';
@@ -29,7 +29,6 @@ import { useMemo } from 'react';
 
 interface DragDropTaskListProps {
   tasks: Task[];
-  filters: TaskFilters;
   isLoading?: boolean;
   error?: Error | null;
   showDetails?: boolean;
@@ -40,7 +39,6 @@ interface DragDropTaskListProps {
 
 export function DragDropTaskList({
   tasks,
-  filters,
   isLoading,
   error,
   showDetails = false,
@@ -56,65 +54,36 @@ export function DragDropTaskList({
     setLocalTasks(tasks);
   }, [tasks]);
 
-  // Filter and sort tasks
-  const filteredAndSortedTasks = useMemo(() => {
-    let filtered = [...(isDragMode ? localTasks : tasks)];
-
-    // Apply filters
-    if (filters.status) {
-      filtered = filtered.filter(task => task.status === filters.status);
-    }
-
-    if (filters.priority) {
-      filtered = filtered.filter(task => task.priority === filters.priority);
-    }
-
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(task => 
-        task.title.toLowerCase().includes(searchLower) ||
-        (task.description && task.description.toLowerCase().includes(searchLower))
-      );
-    }
-
-    if (filters.due_date_from) {
-      filtered = filtered.filter(task => 
-        task.due_date && new Date(task.due_date) >= new Date(filters.due_date_from!)
-      );
-    }
-
-    if (filters.due_date_to) {
-      filtered = filtered.filter(task => 
-        task.due_date && new Date(task.due_date) <= new Date(filters.due_date_to!)
-      );
-    }
+  // Sort tasks (only when not in drag mode)
+  const sortedTasks = useMemo(() => {
+    const tasksToUse = isDragMode ? localTasks : tasks;
 
     // In drag mode, don't sort - preserve manual order
-    if (!isDragMode) {
-      // Sort tasks (default: newest first, then by priority)
-      filtered.sort((a, b) => {
-        // First by status (incomplete tasks first)
-        if (a.status !== b.status) {
-          if (a.status === 'completed') return 1;
-          if (b.status === 'completed') return -1;
-        }
-
-        // Then by priority
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
-        const aPriority = priorityOrder[a.priority] || 0;
-        const bPriority = priorityOrder[b.priority] || 0;
-        
-        if (aPriority !== bPriority) {
-          return bPriority - aPriority;
-        }
-
-        // Finally by creation date (newest first)
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
+    if (isDragMode) {
+      return tasksToUse;
     }
 
-    return filtered;
-  }, [isDragMode ? localTasks : tasks, filters, isDragMode]);
+    // Sort tasks (default: newest first, then by priority)
+    return [...tasksToUse].sort((a, b) => {
+      // First by status (incomplete tasks first)
+      if (a.status !== b.status) {
+        if (a.status === 'completed') return 1;
+        if (b.status === 'completed') return -1;
+      }
+
+      // Then by priority
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      const aPriority = priorityOrder[a.priority] || 0;
+      const bPriority = priorityOrder[b.priority] || 0;
+      
+      if (aPriority !== bPriority) {
+        return bPriority - aPriority;
+      }
+
+      // Finally by creation date (newest first)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, [isDragMode ? localTasks : tasks, isDragMode]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -131,10 +100,10 @@ export function DragDropTaskList({
     const { active, over } = event;
 
     if (active.id !== over?.id) {
-      const oldIndex = filteredAndSortedTasks.findIndex(task => task.id === active.id);
-      const newIndex = filteredAndSortedTasks.findIndex(task => task.id === over?.id);
+      const oldIndex = sortedTasks.findIndex(task => task.id === active.id);
+      const newIndex = sortedTasks.findIndex(task => task.id === over?.id);
 
-      const newTasks = arrayMove(filteredAndSortedTasks, oldIndex, newIndex);
+      const newTasks = arrayMove(sortedTasks, oldIndex, newIndex);
       setLocalTasks(newTasks);
       
       // Notify parent component of reorder
@@ -145,7 +114,7 @@ export function DragDropTaskList({
   const toggleDragMode = () => {
     if (!isDragMode) {
       // Entering drag mode - sync local tasks with current tasks
-      setLocalTasks(filteredAndSortedTasks);
+      setLocalTasks(sortedTasks);
     }
     setIsDragMode(!isDragMode);
   };
@@ -188,7 +157,7 @@ export function DragDropTaskList({
     );
   }
 
-  if (filteredAndSortedTasks.length === 0) {
+  if (sortedTasks.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="text-gray-400 mb-4">
@@ -260,11 +229,11 @@ export function DragDropTaskList({
         modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
       >
         <SortableContext
-          items={filteredAndSortedTasks.map(task => task.id)}
+          items={sortedTasks.map(task => task.id)}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-2">
-            {filteredAndSortedTasks.map((task) => (
+            {sortedTasks.map((task) => (
               <SortableTaskItem
                 key={task.id}
                 task={task}

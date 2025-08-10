@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { EchoSidebar } from '@/components/EchoSidebar';
 import { MainDashboard } from '@/components/MainDashboard';
@@ -20,6 +21,7 @@ export function Layout() {
   
   // UI state
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Note: Offline support removed for cleaner UI
 
@@ -113,37 +115,62 @@ export function Layout() {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full overflow-hidden">
-        {/* Sticky Sidebar */}
-        <div className="sticky top-0 h-screen flex-shrink-0">
-          <EchoSidebar activeTab={activeTab} onTabChange={handleTabChange} />
+        {/* Fixed Sidebar */}
+        <div className={`fixed left-0 top-0 h-screen flex-shrink-0 z-30 transition-transform duration-300 ease-in-out ${
+          isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}>
+          <EchoSidebar activeTab={activeTab} onTabChange={(tab) => {
+            handleTabChange(tab);
+            setIsMobileSidebarOpen(false); // Close mobile sidebar on navigation
+          }} />
         </div>
 
-        <SidebarInset className="flex flex-col flex-1 min-w-0">
+        {/* Mobile Sidebar Overlay */}
+        {isMobileSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
+        )}
+
+        {/* Main Content Area with left margin for sidebar */}
+        <div className="flex flex-col flex-1 min-w-0 lg:ml-64">
           {/* Clean Header Bar */}
-          <header className="flex h-16 shrink-0 items-center justify-end gap-3 border-b border-border/50 px-6 bg-background/80 backdrop-blur-sm">
-            {/* Notification Center */}
-            <NotificationCenter onNavigate={handleNavigateWithId} />
-            
-            {/* Theme Toggle */}
-            <ThemeToggle />
-            
-            {/* Keyboard Shortcuts Help */}
+          <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/50 px-6 bg-background/80 backdrop-blur-sm sticky top-0 z-20">
+            {/* Mobile Menu Button */}
             <button
-              onClick={() => setShowKeyboardHelp(true)}
-              className="flex items-center justify-center w-10 h-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-smooth focus-ring"
-              title="Keyboard Shortcuts (Press ?)"
+              onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+              className="flex items-center justify-center w-10 h-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-smooth focus-ring lg:hidden"
+              title="Toggle Menu"
             >
-              <span className="text-sm font-medium">?</span>
+              {isMobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
+
+            <div className="flex items-center gap-3">
+              {/* Notification Center */}
+              <NotificationCenter onNavigate={handleNavigateWithId} />
+              
+              {/* Theme Toggle */}
+              <ThemeToggle />
+              
+              {/* Keyboard Shortcuts Help */}
+              <button
+                onClick={() => setShowKeyboardHelp(true)}
+                className="flex items-center justify-center w-10 h-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-smooth focus-ring"
+                title="Keyboard Shortcuts (Press ?)"
+              >
+                <span className="text-sm font-medium">?</span>
+              </button>
+            </div>
           </header>
 
-          {/* Enhanced Main Content */}
+          {/* Enhanced Main Content - Only this area scrolls */}
           <div className="flex-1 overflow-y-auto">
-            <div className="animate-fade-in">
+            <div className="animate-fade-in h-full">
               {renderActiveView()}
             </div>
           </div>
-        </SidebarInset>
+        </div>
       </div>
 
       {/* Keyboard Shortcuts Help Modal */}

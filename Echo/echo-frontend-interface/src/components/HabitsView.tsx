@@ -4,28 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { HabitForm } from './habits/HabitForm';
-import { HabitFilters } from './habits/HabitFilters';
 import { HabitList } from './habits/HabitList';
 import { HabitAnalytics } from './habits/HabitAnalytics';
 import { useHabits } from '@/hooks/useHabits';
 import { useApiHealth } from '@/hooks/useApiHealth';
-import { HabitFilters as HabitFiltersType, Habit } from '@/types';
+import { Habit } from '@/types';
 
 export function HabitsView() {
-  const [filters, setFilters] = useState<HabitFiltersType>({});
   const [showHabitForm, setShowHabitForm] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [analyticsHabit, setAnalyticsHabit] = useState<Habit | null>(null);
 
-  // Fetch habits with current filters
-  const { data: habits = [], isLoading, error, refetch } = useHabits(filters);
+  // Fetch all habits
+  const { data: habits = [], isLoading, error, refetch } = useHabits();
   
   // Check API health
   const { data: healthStatus, isError: healthError } = useApiHealth();
 
-  // Calculate filtered count for display
+  // Calculate habit count for display
   const totalHabits = habits.length;
-  const filteredHabits = habits.length; // Since filtering is done on the server
 
   const handleRefresh = () => {
     refetch();
@@ -92,20 +89,16 @@ export function HabitsView() {
           </Alert>
         )}
 
-        {/* Filters */}
-        <HabitFilters
-          filters={filters}
-          onFiltersChange={setFilters}
-          totalCount={totalHabits}
-          filteredCount={filteredHabits}
-        />
+        {/* Habit count display */}
+        <div className="text-sm text-gray-600">
+          Showing {totalHabits} habits
+        </div>
       </div>
 
       {/* Habit List */}
       <div className="flex-1 overflow-auto p-6">
         <HabitList
           habits={habits}
-          filters={filters}
           isLoading={isLoading}
           error={error}
           onEditHabit={handleEditHabit}

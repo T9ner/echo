@@ -27,7 +27,7 @@ const navigationItems = [
 
 export function EchoSidebar({ activeTab, onTabChange }: EchoSidebarProps) {
   return (
-    <Sidebar collapsible="none" className="bg-sidebar border-sidebar-border">
+    <Sidebar collapsible="none" className="bg-sidebar border-sidebar-border h-full w-64">
       {/* Clean Header */}
       <div className="p-4 border-b border-sidebar-border/50">
         <div className="flex items-center gap-3">

@@ -234,18 +234,7 @@ export interface ValidationErrorResponse extends ApiError {
 // UI State types
 export type ActiveTab = 'main' | 'tasks' | 'habits' | 'calendar' | 'chat' | 'analytics';
 
-export interface TaskFilters {
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  search?: string;
-  due_date_from?: string;
-  due_date_to?: string;
-}
 
-export interface HabitFilters {
-  frequency?: HabitFrequency;
-  search?: string;
-}
 
 // Calendar integration types
 export interface CalendarEvent {
