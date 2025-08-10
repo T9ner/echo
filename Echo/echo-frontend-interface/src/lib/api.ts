@@ -17,7 +17,52 @@ import {
   HabitFilters
 } from '@/types';
 
-// Create axios instance with base configuration
+// Simple in-memory cache for GET requests
+class ApiCache {
+  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  
+  set(key: string, data: any, ttl: number = 300000) { // 5 minutes default
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    });
+  }
+  
+  get(key: string): any | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+    
+    if (Date.now() - entry.timestamp > entry.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return entry.data;
+  }
+  
+  clear() {
+    this.cache.clear();
+  }
+  
+  clearPattern(pattern: string) {
+    const regex = new RegExp(pattern);
+    for (const key of this.cache.keys()) {
+      if (regex.test(key)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+}
+
+const apiCache = new ApiCache();
+
+// Generate cache key from request config
+function getCacheKey(method: string, url: string, params?: any): string {
+  return `${method}:${url}:${JSON.stringify(params || {})}`;
+}
+
+// Create axios instance with base configuration and performance optimizations
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
   timeout: 45000, // 45 seconds timeout for local AI models
@@ -26,13 +71,39 @@ const api = axios.create({
   },
 });
 
-// Request interceptor for adding auth tokens
+// Request interceptor with caching and performance monitoring
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add request timestamp for performance monitoring
+    config.metadata = { startTime: Date.now() };
+    
+    // Check cache for GET requests
+    if (config.method === 'get') {
+      const cacheKey = getCacheKey('get', config.url || '', config.params);
+      const cachedData = apiCache.get(cacheKey);
+      
+      if (cachedData) {
+        console.log(`Cache hit for: ${config.url}`);
+        // Return cached data as a resolved promise
+        return Promise.reject({
+          config,
+          response: {
+            data: cachedData,
+            status: 200,
+            statusText: 'OK (cached)',
+            headers: {},
+            config,
+          },
+          cached: true,
+        });
+      }
+    }
+    
     return config;
   },
   (error) => {
@@ -40,18 +111,62 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for handling errors
+// Response interceptor with caching and performance monitoring
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Performance monitoring
+    const duration = Date.now() - (response.config.metadata?.startTime || 0);
+    if (duration > 2000) {
+      console.warn(`Slow API request: ${response.config.method?.toUpperCase()} ${response.config.url} took ${duration}ms`);
+    }
+    
+    // Cache GET responses
+    if (response.config.method === 'get' && response.status === 200) {
+      const cacheKey = getCacheKey('get', response.config.url || '', response.config.params);
+      const ttl = response.config.url?.includes('/analytics') ? 600000 : 300000; // 10min for analytics, 5min for others
+      apiCache.set(cacheKey, response.data, ttl);
+    }
+    
+    return response;
+  },
   (error) => {
+    // Handle cached responses
+    if (error.cached) {
+      return Promise.resolve(error.response);
+    }
+    
+    // Performance monitoring for errors
+    const duration = Date.now() - (error.config?.metadata?.startTime || 0);
+    console.error(`API request failed: ${error.config?.method?.toUpperCase()} ${error.config?.url} after ${duration}ms`, error);
+    
     if (error.response?.status === 401) {
-      // Handle unauthorized access
       localStorage.removeItem('auth_token');
       window.location.href = '/login';
     }
+    
+    // Clear related cache on write operations that fail
+    if (error.config?.method !== 'get' && error.response?.status >= 400) {
+      const url = error.config?.url || '';
+      if (url.includes('/tasks')) {
+        apiCache.clearPattern('get:/tasks');
+      } else if (url.includes('/habits')) {
+        apiCache.clearPattern('get:/habits');
+      } else if (url.includes('/analytics')) {
+        apiCache.clearPattern('get:/analytics');
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
+
+// Cache management utilities
+export const cacheUtils = {
+  clear: () => apiCache.clear(),
+  clearTasks: () => apiCache.clearPattern('get:/tasks'),
+  clearHabits: () => apiCache.clearPattern('get:/habits'),
+  clearAnalytics: () => apiCache.clearPattern('get:/analytics'),
+};
 
 // Task API functions
 export const taskApi = {

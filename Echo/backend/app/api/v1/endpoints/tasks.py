@@ -18,6 +18,7 @@ from app.core.database import get_db
 from app.services.task_service import TaskService
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
 from app.models.enums import TaskStatus, TaskPriority
+from app.core.performance import performance_monitor, track_api_call
 
 # Create router - this groups all task-related endpoints
 router = APIRouter()
@@ -78,9 +79,12 @@ def create_task(
 
 
 @router.get("/", response_model=List[TaskResponse])
+@performance_monitor(slow_threshold=0.5)
+@track_api_call
 def get_tasks(
     status: Optional[TaskStatus] = Query(None, description="Filter by task status"),
     priority: Optional[TaskPriority] = Query(None, description="Filter by task priority"),
+    search: Optional[str] = Query(None, description="Search in task title and description"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of tasks to return"),
     offset: int = Query(0, ge=0, description="Number of tasks to skip"),
     db: Session = Depends(get_db)
@@ -132,6 +136,7 @@ def get_tasks(
         tasks = service.get_all_tasks(
             status=status,
             priority=priority,
+            search=search,
             limit=limit,
             offset=offset
         )
