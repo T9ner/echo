@@ -113,35 +113,6 @@ echo-app/
 └── README.md
 ```
 
-## Development Roadmap
-
-**Phase 1: Core Features**
-- [x] Basic task CRUD
-- [x] Habit tracking
-- [x] Simple chat interface
-- [ ] Database integration
-- [ ] Google Calendar sync
-
-**Phase 2: AI Integration**
-- [ ] OpenAI-powered chat responses
-- [ ] Smart task scheduling
-- [ ] Habit pattern recognition
-- [ ] Productivity insights
-
-**Phase 3: Advanced Features**
-- [ ] User authentication
-- [ ] Mobile app
-- [ ] Email notifications
-- [ ] Team collaboration
-
-## Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## License
 
 MIT License - see LICENSE file for details.
