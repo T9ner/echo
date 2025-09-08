@@ -50,7 +50,8 @@ export interface TaskUpdate {
 export enum HabitFrequency {
   DAILY = 'daily',
   WEEKLY = 'weekly',
-  CUSTOM = 'custom'
+  CUSTOM = 'custom',
+  MONTHLY = "MONTHLY"
 }
 
 export interface Habit {
@@ -236,24 +237,164 @@ export type ActiveTab = 'main' | 'tasks' | 'habits' | 'calendar' | 'chat' | 'ana
 
 
 
-// Calendar integration types
-export interface CalendarEvent {
+// Calendar/Event types
+export enum EventType {
+  MEETING = 'meeting',
+  TASK = 'task',
+  PERSONAL = 'personal',
+  REMINDER = 'reminder',
+  APPOINTMENT = 'appointment'
+}
+
+export enum EventStatus {
+  SCHEDULED = 'scheduled',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled'
+}
+
+export enum RecurrenceType {
+  NONE = 'none',
+  DAILY = 'daily',
+  WEEKLY = 'weekly',
+  MONTHLY = 'monthly',
+  YEARLY = 'yearly',
+  CUSTOM = 'custom'
+}
+
+export interface Event {
   id: string;
   title: string;
   description?: string;
+  location?: string;
   start_time: string;
   end_time: string;
-  location?: string;
-  attendees?: string[];
+  all_day: boolean;
+  event_type: EventType;
+  status: EventStatus;
+  recurrence_type: RecurrenceType;
+  recurrence_interval?: number;
+  recurrence_end_date?: string;
+  recurrence_count?: number;
   task_id?: string;
+  habit_id?: string;
+  duration_minutes: number;
+  is_recurring: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface CalendarEventCreate {
+export interface EventCreate {
   title: string;
   description?: string;
+  location?: string;
   start_time: string;
   end_time: string;
-  location?: string;
-  attendees?: string[];
+  all_day?: boolean;
+  event_type?: EventType;
+  status?: EventStatus;
+  recurrence_type?: RecurrenceType;
+  recurrence_interval?: number;
+  recurrence_end_date?: string;
+  recurrence_count?: number;
   task_id?: string;
+  habit_id?: string;
 }
+
+export interface EventUpdate {
+  title?: string;
+  description?: string;
+  location?: string;
+  start_time?: string;
+  end_time?: string;
+  all_day?: boolean;
+  event_type?: EventType;
+  status?: EventStatus;
+  recurrence_type?: RecurrenceType;
+  recurrence_interval?: number;
+  recurrence_end_date?: string;
+  recurrence_count?: number;
+  task_id?: string;
+  habit_id?: string;
+}
+
+export interface EventReminder {
+  id: string;
+  event_id: string;
+  minutes_before: number;
+  method: string;
+  sent: boolean;
+  sent_at?: string;
+  created_at: string;
+}
+
+export interface EventReminderCreate {
+  minutes_before: number;
+  method?: string;
+}
+
+export interface EventWithReminders extends Event {
+  reminders: EventReminder[];
+}
+
+export interface EventList {
+  events: Event[];
+  total: number;
+  page: number;
+  per_page: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+export interface EventFilter {
+  start_date?: string;
+  end_date?: string;
+  event_type?: EventType;
+  status?: EventStatus;
+  search?: string;
+  task_id?: string;
+  habit_id?: string;
+}
+
+export interface MonthEventsResponse {
+  year: number;
+  month: number;
+  events: Event[];
+  total_events: number;
+}
+
+export interface EventConflictCheck {
+  start_time: string;
+  end_time: string;
+  all_day?: boolean;
+  exclude_event_id?: string;
+}
+
+export interface EventConflictResponse {
+  has_conflicts: boolean;
+  conflicting_events: Event[];
+}
+
+// Calendar view types
+export interface CalendarDay {
+  date: Date;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  events: Event[];
+}
+
+export interface CalendarWeek {
+  days: CalendarDay[];
+  weekNumber: number;
+}
+
+export interface CalendarMonth {
+  year: number;
+  month: number;
+  weeks: CalendarWeek[];
+  totalEvents: number;
+}
+
+// Legacy types for backward compatibility
+export interface CalendarEvent extends Event {}
+export interface CalendarEventCreate extends EventCreate {}

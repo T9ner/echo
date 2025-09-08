@@ -16,6 +16,7 @@ import json
 import logging
 
 from app.services.local_ai_client import local_ai_client
+from app.services.cloud_ai_client import cloud_ai_client
 from app.services.task_service import TaskService
 from app.services.habit_service import HabitService
 from app.models.chat import ChatMessage
@@ -255,23 +256,42 @@ Remember: You are ECHO, the user's personal productivity companion. Be helpful, 
             # Add current user message
             messages.append({"role": "user", "content": user_message})
             
-            # Generate response using Local AI
-            logger.info(f"USE_LOCAL_AI setting: {settings.USE_LOCAL_AI}")
+            # Try AI providers in order of preference
+            response = None
+            
+            # 1. Try Local AI first (if enabled and available)
             if settings.USE_LOCAL_AI:
                 logger.info("Attempting to use local AI...")
                 response = await local_ai_client.generate_response(messages)
-                logger.info(f"Local AI response: {response}")
                 if response:
                     logger.info("Successfully generated Local AI response")
                     return response
                 else:
-                    logger.warning("Local AI failed, using contextual fallback")
-            else:
-                logger.info("Local AI disabled in configuration")
+                    logger.warning("Local AI failed, trying cloud AI...")
             
-            # If local AI fails or is disabled, use contextual fallback
-            logger.warning("Using contextual fallback response")
-            return self._generate_contextual_fallback(user_message, context)
+            # 2. Try Cloud AI (if enabled)
+            if settings.USE_CLOUD_AI and not response:
+                logger.info("Attempting to use cloud AI...")
+                response = await cloud_ai_client.generate_response(messages)
+                if response:
+                    logger.info("Successfully generated Cloud AI response")
+                    return response
+                else:
+                    logger.warning("Cloud AI failed, using contextual fallback")
+            
+            # 3. Use contextual fallback if all AI fails
+            logger.warning("All AI providers failed, using contextual fallback")
+            fallback_response = self._generate_contextual_fallback(user_message, context)
+            
+            # Add helpful setup info based on configuration
+            if not settings.USE_LOCAL_AI and not settings.USE_CLOUD_AI:
+                fallback_response += "\n\n💡 **AI Setup**: To enable AI responses, either:\n• Set up local AI: `USE_LOCAL_AI=true` + install Ollama\n• Set up cloud AI: `USE_CLOUD_AI=true` + add API keys"
+            elif settings.USE_LOCAL_AI and not response:
+                fallback_response += "\n\n💡 **Local AI**: Not responding. Run `python fix_ai.py` to fix."
+            elif settings.USE_CLOUD_AI and not response:
+                fallback_response += "\n\n💡 **Cloud AI**: Check your API keys in .env file."
+            
+            return fallback_response
                 
         except Exception as e:
             logger.error(f"Error generating response: {e}")

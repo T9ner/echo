@@ -18,6 +18,8 @@ export function HabitsView() {
   // Fetch all habits
   const { data: habits = [], isLoading, error, refetch } = useHabits();
   
+
+  
   // Check API health
   const { data: healthStatus, isError: healthError } = useApiHealth();
 
@@ -55,11 +57,11 @@ export function HabitsView() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 p-6 border-b bg-white">
+      <div className="flex-shrink-0 p-6 border-b bg-background">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Habits</h1>
-            <p className="text-gray-600">Build better routines and track your progress</p>
+            <h1 className="text-3xl font-bold text-foreground">Habits</h1>
+            <p className="text-muted-foreground">Build better routines and track your progress</p>
           </div>
           
           <div className="flex items-center gap-2">
@@ -90,7 +92,7 @@ export function HabitsView() {
         )}
 
         {/* Habit count display */}
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-muted-foreground">
           Showing {totalHabits} habits
         </div>
       </div>

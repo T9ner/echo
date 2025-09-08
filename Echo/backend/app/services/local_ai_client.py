@@ -41,9 +41,17 @@ class LocalAIClient:
             ollama_host: Ollama server URL (default: http://localhost:11434)
         """
         self.ollama_host = ollama_host
-        self.default_model = "gemma3:1b"  # Faster 1B parameter model
-        self.timeout = 30.0  # Reduced timeout for faster model
-        logger.info(f"LocalAI client initialized with host: {ollama_host}")
+        # Ultra-fast models for productivity tasks (ordered by speed)
+        self.fast_models = [
+            "llama3.2:1b",    # Meta's 1B model - very fast and widely available
+            "gemma2:2b",      # Google's 2B model - excellent speed/quality balance
+            "phi3:mini",      # Microsoft's 3.8B model - very fast
+            "qwen2:1.5b",     # Alibaba's 1.5B model - ultra fast
+            "tinyllama:1.1b", # Tiny but functional - fastest option
+        ]
+        self.default_model = settings.LOCAL_AI_MODEL or "gemma2:2b"
+        self.timeout = 30.0  # Reasonable timeout for reliability
+        logger.info(f"LocalAI client initialized with host: {ollama_host}, default model: {self.default_model}")
     
     async def is_available(self) -> bool:
         """
@@ -83,6 +91,34 @@ class LocalAIClient:
             logger.error(f"Error listing models: {e}")
             return []
     
+    async def get_fastest_available_model(self) -> Optional[str]:
+        """
+        Get the fastest available model from our preferred list
+        
+        Returns:
+            Name of fastest available model, or None if none available
+        """
+        try:
+            available_models = await self.list_models()
+            
+            # Check our fast models in order of preference (fastest first)
+            for fast_model in self.fast_models:
+                if fast_model in available_models:
+                    logger.info(f"Selected fastest available model: {fast_model}")
+                    return fast_model
+            
+            # If none of our preferred models are available, use any available model
+            if available_models:
+                fallback_model = available_models[0]
+                logger.info(f"Using fallback model: {fallback_model}")
+                return fallback_model
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error finding fastest model: {e}")
+            return None
+    
     async def pull_model(self, model_name: str) -> bool:
         """
         Download/pull a model to local system
@@ -105,12 +141,41 @@ class LocalAIClient:
             logger.error(f"Error pulling model {model_name}: {e}")
             return False
     
+    async def ensure_fast_model_available(self) -> bool:
+        """
+        Ensure at least one fast model is available, downloading if necessary
+        
+        Returns:
+            bool: True if a fast model is available
+        """
+        try:
+            # Check if we already have a fast model
+            fastest = await self.get_fastest_available_model()
+            if fastest:
+                logger.info(f"Fast model already available: {fastest}")
+                return True
+            
+            # Try to pull the fastest model
+            logger.info("No fast models found, attempting to pull gemma2:2b...")
+            success = await self.pull_model("gemma2:2b")
+            
+            if success:
+                logger.info("Successfully pulled gemma2:2b")
+                return True
+            else:
+                logger.warning("Failed to pull gemma2:2b, trying tinyllama:1.1b...")
+                return await self.pull_model("tinyllama:1.1b")
+                
+        except Exception as e:
+            logger.error(f"Error ensuring fast model: {e}")
+            return False
+    
     async def generate_response(
         self,
         messages: List[Dict[str, str]],
         model: Optional[str] = None,
-        max_tokens: int = 500,
-        temperature: float = 0.7
+        max_tokens: int = 300,  # Reduced for faster responses
+        temperature: float = 0.3  # Lower temperature for more focused responses
     ) -> Optional[str]:
         """
         Generate a response using local AI model
@@ -128,7 +193,16 @@ class LocalAIClient:
             logger.warning("Local AI not available")
             return None
         
-        model = model or self.default_model
+        # Auto-select fastest model if none specified
+        if not model:
+            model = await self.get_fastest_available_model()
+            if not model:
+                logger.error("No models available")
+                return None
+        
+        # Fallback to default model if auto-selection fails
+        if not model:
+            model = self.default_model
         
         try:
             # Convert messages to prompt format
@@ -156,6 +230,10 @@ class LocalAIClient:
                         "options": {
                             "temperature": temperature,
                             "num_predict": max_tokens,
+                            "top_k": 20,        # Limit vocabulary for faster generation
+                            "top_p": 0.9,       # Focus on most likely tokens
+                            "repeat_penalty": 1.1,  # Reduce repetition
+                            "num_ctx": 2048,    # Smaller context window for speed
                         }
                     }
                 )
@@ -202,7 +280,12 @@ class LocalAIClient:
             yield "I'm sorry, but the local AI service is not available right now."
             return
         
-        model = model or self.default_model
+        # Auto-select fastest model if none specified
+        if not model:
+            model = await self.get_fastest_available_model()
+            if not model:
+                yield "No AI models are currently available."
+                return
         
         try:
             prompt = self._messages_to_prompt(messages)
@@ -220,6 +303,10 @@ class LocalAIClient:
                         "options": {
                             "temperature": temperature,
                             "num_predict": max_tokens,
+                            "top_k": 20,        # Limit vocabulary for faster generation
+                            "top_p": 0.9,       # Focus on most likely tokens
+                            "repeat_penalty": 1.1,  # Reduce repetition
+                            "num_ctx": 2048,    # Smaller context window for speed
                         }
                     }
                 ) as response:

@@ -34,6 +34,11 @@ export const LazyProductivityMetrics = lazy(() =>
     default: module.ProductivityMetrics,
   }))
 );
+export const LazyCalendarView = lazy(() =>
+  import("./CalendarView").then((module) => ({
+    default: module.CalendarView,
+  }))
+);
 
 // HOC for wrapping lazy components with Suspense
 export const withSuspense = <P extends object>(
@@ -59,6 +64,7 @@ export const SuspendedAnalyticsCharts = withSuspense(LazyAnalyticsCharts);
 export const SuspendedProductivityMetrics = withSuspense(
   LazyProductivityMetrics
 );
+export const SuspendedCalendarView = withSuspense(LazyCalendarView);
 
 // Custom loading states for specific components
 export const ChatLoadingState = () => (
@@ -107,6 +113,10 @@ export const preloadComponents = {
   metrics: () =>
     import("./analytics/ProductivityMetrics").then((module) => ({
       default: module.ProductivityMetrics,
+    })),
+  calendar: () =>
+    import("./CalendarView").then((module) => ({
+      default: module.CalendarView,
     })),
 };
 

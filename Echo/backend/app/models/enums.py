@@ -26,3 +26,30 @@ class HabitFrequency(str, enum.Enum):
     WEEKLY = "weekly"
     MONTHLY = "monthly"
     CUSTOM = "custom"
+
+
+class EventType(str, enum.Enum):
+    """Event type enumeration"""
+    MEETING = "meeting"
+    TASK = "task"
+    PERSONAL = "personal"
+    REMINDER = "reminder"
+    APPOINTMENT = "appointment"
+
+
+class EventStatus(str, enum.Enum):
+    """Event status enumeration"""
+    SCHEDULED = "scheduled"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
+class RecurrenceType(str, enum.Enum):
+    """Event recurrence type enumeration"""
+    NONE = "none"
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    YEARLY = "yearly"
+    CUSTOM = "custom"

@@ -26,5 +26,8 @@ class Task(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
     
+    # Relationships (back_populates will be set from Event model)
+    # events = relationship("Event", back_populates="task")
+    
     def __repr__(self) -> str:
         return f"<Task(id={self.id}, title='{self.title}', status={self.status})>"

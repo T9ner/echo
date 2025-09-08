@@ -36,10 +36,10 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
-        "http://localhost:8080",
+        "http://localhost:8081",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
-        "http://127.0.0.1:8080",
+        "http://127.0.0.1:8081",
     ]
     
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
@@ -59,6 +59,12 @@ class Settings(BaseSettings):
     USE_LOCAL_AI: bool = os.getenv("USE_LOCAL_AI", "true").lower() == "true"  # Default to true
     OLLAMA_HOST: str = os.getenv("OLLAMA_HOST", "http://localhost:11434")
     LOCAL_AI_MODEL: str = os.getenv("LOCAL_AI_MODEL", "gemma2:2b")
+    
+    # Cloud AI (Free APIs for deployed apps)
+    USE_CLOUD_AI: bool = os.getenv("USE_CLOUD_AI", "false").lower() == "true"
+    GROQ_API_KEY: Optional[str] = os.getenv("GROQ_API_KEY")
+    HUGGINGFACE_API_KEY: Optional[str] = os.getenv("HUGGINGFACE_API_KEY")
+    OPENROUTER_API_KEY: Optional[str] = os.getenv("OPENROUTER_API_KEY")
     
     # Google Calendar
     GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID")

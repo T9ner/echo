@@ -202,10 +202,7 @@ export function useVirtualScrollPerformance() {
     const timeSinceLastRender = now - lastRenderTime.current;
     lastRenderTime.current = now;
 
-    // Log performance metrics in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Virtual scroll render #${renderCount.current}, time since last: ${timeSinceLastRender}ms`);
-    }
+    // Performance metrics tracked for optimization
   });
 
   return {

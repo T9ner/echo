@@ -15,6 +15,8 @@ export function TasksView() {
   // Fetch all tasks without filters
   const { data: tasks = [], isLoading, error, refetch } = useTasks();
   
+
+  
   // Check API health
   const { data: healthStatus, isError: healthError } = useApiHealth();
 
@@ -33,11 +35,11 @@ export function TasksView() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 p-6 border-b bg-white">
+      <div className="flex-shrink-0 p-6 border-b bg-background">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
-            <p className="text-gray-600">Manage your tasks and track progress</p>
+            <h1 className="text-3xl font-bold text-foreground">Tasks</h1>
+            <p className="text-muted-foreground">Manage your tasks and track progress</p>
           </div>
           
           <div className="flex items-center gap-2">
@@ -89,7 +91,7 @@ export function TasksView() {
         )}
 
         {/* Task count display */}
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-muted-foreground">
           Showing {totalTasks} tasks
         </div>
       </div>
@@ -104,7 +106,7 @@ export function TasksView() {
             showDetails={false}
             onTasksReorder={(reorderedTasks) => {
               // Handle task reordering - could save to backend
-              console.log('Tasks reordered:', reorderedTasks);
+              // TODO: Implement backend task reordering
             }}
           />
         ) : (

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import NotFound from "./pages/NotFound";
+import GoogleCalendarCallback from "@/components/calendar/GoogleCalendarCallback";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/tasks" element={<Layout />} />
           <Route path="/habits" element={<Layout />} />
           <Route path="/calendar" element={<Layout />} />
+          <Route path="/calendar/google-callback" element={<GoogleCalendarCallback />} />
           <Route path="/chat" element={<Layout />} />
           <Route path="/analytics" element={<Layout />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

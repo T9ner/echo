@@ -28,6 +28,7 @@ class Habit(Base):
     
     # Relationships
     logs: Mapped[List["HabitLog"]] = relationship(back_populates="habit", cascade="all, delete-orphan")
+    # events = relationship("Event", back_populates="habit")
     
     def __repr__(self) -> str:
         return f"<Habit(id={self.id}, name='{self.name}', frequency={self.frequency})>"

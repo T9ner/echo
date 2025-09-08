@@ -32,7 +32,7 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", $FrontendCommand
 
 Write-Host ""
 Write-Host "Both servers are starting!" -ForegroundColor Green
-Write-Host "Frontend: http://localhost:5173" -ForegroundColor Cyan
+Write-Host "Frontend: http://localhost:8081" -ForegroundColor Cyan
 Write-Host "Backend: http://localhost:8000" -ForegroundColor Cyan  
 Write-Host "API Docs: http://localhost:8000/docs" -ForegroundColor Cyan
 Write-Host ""

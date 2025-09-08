@@ -6,7 +6,7 @@ import { EchoSidebar } from '@/components/EchoSidebar';
 import { MainDashboard } from '@/components/MainDashboard';
 import { TasksView } from '@/components/TasksView';
 import { HabitsView } from '@/components/HabitsView';
-import { CalendarView } from '@/components/CalendarView';
+import CalendarView from '@/pages/CalendarView';
 import { ChatView } from '@/components/ChatView';
 import { AnalyticsView } from '@/components/AnalyticsView';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';

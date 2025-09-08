@@ -71,11 +71,11 @@ export function AnalyticsView() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 p-6 border-b bg-white">
+      <div className="flex-shrink-0 p-6 border-b bg-background">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-            <p className="text-gray-600">Track your productivity patterns and insights</p>
+            <h1 className="text-3xl font-bold text-foreground">Analytics Dashboard</h1>
+            <p className="text-muted-foreground">Track your productivity patterns and insights</p>
           </div>
           
           <div className="flex items-center gap-2">
@@ -113,8 +113,8 @@ export function AnalyticsView() {
         {/* Date Range Selector */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Date Range:</span>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Date Range:</span>
           </div>
           <DateRangeSelector
             value={dateRange}

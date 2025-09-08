@@ -7,7 +7,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 8081,
   },
   plugins: [
     react(),
@@ -31,9 +31,7 @@ export default defineConfig(({ mode }) => ({
           'chart-vendor': ['recharts'],
           'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
           'dnd-vendor': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
-          // Feature chunks
-          'analytics': ['src/components/analytics'],
-          'chat': ['src/components/chat'],
+          // Feature chunks - these will be handled automatically by dynamic imports
         },
         // Optimize chunk names
         chunkFileNames: (chunkInfo) => {
